@@ -45,7 +45,7 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
               ) : (
                 <div 
                   key={card.id} 
-                  className="bg-gray-800 p-3 rounded-lg flex items-center justify-between hover:bg-gray-700 cursor-pointer"
+                  className={`bg-gray-800 p-3 rounded-lg flex items-center justify-between hover:bg-gray-700 cursor-pointer ${card.hasTaunt ? 'border-l-4 border-yellow-400' : ''}`}
                   onClick={() => setExpandedCard(card)}
                 >
                   <div className="flex items-center gap-4">
@@ -53,6 +53,12 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
                       <span className="text-white font-bold">{card.cost}</span>
                     </div>
                     <span className="text-white font-bold">{card.name}</span>
+                    {card.hasTaunt && (
+                      <div className="flex items-center gap-1 text-yellow-400" title="Taunt: Enemies must attack this unit first">
+                        <span>🛡️</span>
+                        <span className="text-sm">Taunt</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-red-400">⚔️ {card.attack}</span>

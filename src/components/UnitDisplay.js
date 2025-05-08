@@ -12,42 +12,52 @@ const UnitDisplay = ({ unit }) => {
   return (
     <div
       className={`
-        relative w-full h-full flex flex-col items-center justify-center
+        relative w-full h-full flex flex-col
         transition-all duration-200 border-4 ${playerBorder}
         ${showDetails ? 'scale-105 shadow-lg' : ''}
         overflow-hidden rounded-lg
+        pt-1 pr-1
       `}
       onMouseEnter={() => setShowDetails(true)}
       onMouseLeave={() => setShowDetails(false)}
     >
       {/* Top third - Archetype color with icon */}
-      <div className={`w-full h-1/3 flex items-center justify-center bg-gradient-to-br ${archetype.unitColor}`}>
-        <span className="text-3xl">{archetype.icon}</span>
-      </div>
-
-      {/* Bottom two thirds - Dark theme */}
-      <div className="w-full h-2/3 bg-gray-800 flex flex-col items-center justify-between p-2">
-        {/* Unit Name */}
-        <div className="text-center px-2">
-          <div className="font-bold text-sm truncate text-white">{unit.name}</div>
-        </div>
-
-        {/* Mana Cost - Upper Right */}
-        <div className="absolute top-1 right-1 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg">
+      <div 
+        className={`
+          relative w-full h-[33.33%] flex items-center justify-center
+          bg-gradient-to-br ${archetype.unitColor}
+          z-0
+        `}
+      >
+        {/* Mana Cost - Fixed at the edge of the card */}
+        <div className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg z-20 border-2 border-blue-400">
           {unit.cost}
         </div>
+        <span className="text-3xl z-10">{archetype.icon}</span>
+      </div>
 
-        {/* Taunt Indicator - Below Mana */}
+      {/* Middle third - Effects area */}
+      <div className="w-full h-[33.33%] bg-gray-800 flex items-center justify-center relative z-10">
+        {/* Taunt Indicator - Centered in effects area */}
         {unit.hasTaunt && (
-          <div className="absolute top-8 right-1 text-yellow-400 text-lg">
-            🛡️
+          <div className="flex items-center justify-center gap-1 text-yellow-400">
+            <span className="text-lg">🛡️</span>
+            <span className="text-sm">Taunt</span>
           </div>
         )}
+      </div>
 
-        {/* Stats Bar - Bottom */}
+      {/* Bottom third - Stats area */}
+      <div className="w-full h-[33.33%] bg-gray-800 flex items-center justify-center z-10">
         <div className="w-full bg-black/50 text-white text-xs px-2 py-1 flex justify-between">
-          <span className="text-red-400">⚔️ {unit.attack}</span>
-          <span className="text-green-400">❤️ {unit.health}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-red-400">⚔️</span>
+            <span className="text-red-400">{unit.attack}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-green-400">❤️</span>
+            <span className="text-green-400">{unit.health}</span>
+          </div>
         </div>
       </div>
 

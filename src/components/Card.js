@@ -21,17 +21,18 @@ const Card = ({ card, selected, onClick, disabled }) => {
       <div className="absolute top-1 right-1 text-2xl">
         {archetype.icon}
       </div>
-      {/* Taunt indicator */}
-      {card.hasTaunt && (
-        <div className="absolute top-8 right-1 text-xl" title="Taunt: Enemies must attack this unit first">
-          🛡️
-        </div>
-      )}
       {/* Card content */}
-      <div className="mt-10 px-2">
+      <div className="mt-10 px-2 flex flex-col items-center">
         <div className="text-sm font-bold text-white text-center mb-1 truncate">
           {card.name}
         </div>
+        {/* Taunt indicator */}
+        {card.hasTaunt && (
+          <div className="flex items-center justify-center gap-1 text-sm text-yellow-400 mb-1" title="Taunt: Enemies must attack this unit first">
+            <span>🛡️</span>
+            <span>Taunt</span>
+          </div>
+        )}
         <div className="absolute bottom-2 left-2 right-2">
           <div className="flex justify-between text-white">
             <div className="bg-red-700/80 px-2 py-1 rounded">
