@@ -43,6 +43,38 @@ export const ARCHETYPES = {
     highlightColor: 'shadow-yellow-500/50',
     unitColor: 'from-yellow-600 to-yellow-800',
     description: 'Tanky warriors with high durability'
+  },
+  demon: {
+    name: 'Demon',
+    color: 'bg-gradient-to-br from-red-700 to-red-900 border-red-500',
+    icon: '👹',
+    highlightColor: 'shadow-red-500/50',
+    unitColor: 'from-red-600 to-red-800',
+    description: 'Fiery beings from the underworld'
+  },
+  ninja: {
+    name: 'Ninja',
+    color: 'bg-gradient-to-br from-indigo-700 to-indigo-900 border-indigo-500',
+    icon: '🥷',
+    highlightColor: 'shadow-indigo-500/50',
+    unitColor: 'from-indigo-600 to-indigo-800',
+    description: 'Masters of stealth and agility'
+  },
+  runner: {
+    name: 'Runner',
+    color: 'bg-gradient-to-br from-orange-600 to-orange-800 border-orange-400',
+    icon: '🏃',
+    highlightColor: 'shadow-orange-400/50',
+    unitColor: 'from-orange-500 to-orange-700',
+    description: 'Fast and elusive, hard to catch'
+  },
+  druid: {
+    name: 'Druid',
+    color: 'bg-gradient-to-br from-emerald-700 to-emerald-900 border-emerald-500',
+    icon: '🐺',
+    highlightColor: 'shadow-emerald-500/50',
+    unitColor: 'from-emerald-600 to-emerald-800',
+    description: 'Guardians of nature, wielding earth magic'
   }
 };
 
@@ -67,6 +99,18 @@ export const generateCard = (id, archetypeKey, hasTaunt = false) => {
     } else if (archetypeKey === 'human') {
       attack = Math.max(1, Math.floor(cost * 0.9 + Math.random() * 2));
       health = Math.max(1, Math.floor(cost * 1.1 + Math.random() * 2));
+    } else if (archetypeKey === 'demon') {
+      attack = Math.max(1, Math.floor(cost * 1.2 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 0.8 + Math.random() * 2));
+    } else if (archetypeKey === 'ninja') {
+      attack = Math.max(1, Math.floor(cost * 1.0 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 1.0 + Math.random() * 2));
+    } else if (archetypeKey === 'runner') {
+      attack = Math.max(1, Math.floor(cost * 1.3 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 0.7 + Math.random() * 2));
+    } else if (archetypeKey === 'druid') {
+      attack = Math.max(1, Math.floor(cost * 0.8 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 1.2 + Math.random() * 2));
     } else {
       attack = Math.max(1, Math.floor(cost * 1.0 + Math.random() * 2));
       health = Math.max(1, Math.floor(cost * 1.0 + Math.random() * 2));
@@ -103,6 +147,18 @@ export const generatePreviewDeck = (archetypeKey) => {
     } else if (archetypeKey === 'human') {
       attack = Math.floor(cost * 0.9);
       health = Math.floor(cost * 1.1);
+    } else if (archetypeKey === 'demon') {
+      attack = Math.floor(cost * 1.2);
+      health = Math.floor(cost * 0.8);
+    } else if (archetypeKey === 'ninja') {
+      attack = Math.floor(cost * 1.0);
+      health = Math.floor(cost * 1.0);
+    } else if (archetypeKey === 'runner') {
+      attack = Math.floor(cost * 1.3);
+      health = Math.floor(cost * 0.7);
+    } else if (archetypeKey === 'druid') {
+      attack = Math.floor(cost * 0.8);
+      health = Math.floor(cost * 1.2);
     } else {
       attack = cost;
       health = cost;
