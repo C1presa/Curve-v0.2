@@ -132,7 +132,13 @@ export const generateCard = (id, archetypeKey, hasTaunt = false, specifiedCost =
     type: archetypeKey,
     movement: 1,
     hasTaunt,
-    description: hasTaunt ? 'Has Taunt: Enemies must attack this unit first.' : 'Basic unit with no special abilities'
+    icon: archetype.icon,
+    color: archetype.color,
+    unitColor: archetype.unitColor,
+    highlightColor: archetype.highlightColor,
+    description: hasTaunt ? 'Has Taunt: Enemies must attack this unit first.' : 'Basic unit with no special abilities',
+    effects: hasTaunt ? ['Taunt'] : [],
+    effectDetails: hasTaunt ? [{ type: 'Taunt', description: 'Enemies must attack this unit first' }] : []
   };
 };
 
