@@ -3,7 +3,18 @@ import React from 'react';
 import { ARCHETYPES } from '../gameLogic/helpers';
 
 const Card = ({ card, selected, onClick, disabled }) => {
+  if (!card) {
+    console.error('Card component received null/undefined card');
+    return null;
+  }
+
+  console.log('Rendering card:', card);
   const archetype = ARCHETYPES[card.type];
+  if (!archetype) {
+    console.error('Invalid card type:', card.type, 'for card:', card);
+    return null;
+  }
+
   return (
     <div
       onClick={() => !disabled && onClick(card)}

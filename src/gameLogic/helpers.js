@@ -156,27 +156,45 @@ export const generateCard = (id, archetypeKey, hasTaunt = false, specifiedCost =
 
 // Generate a preview deck for deck selection
 export const generatePreviewDeck = (archetypeKey) => {
-  const commonCosts = [1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8];
-  
-  // Select 3 random indices for Taunt (20% of 15 cards)
-  const tauntIndices = new Set();
-  while (tauntIndices.size < 3) {
-    tauntIndices.add(Math.floor(Math.random() * 15));
+  const archetype = ARCHETYPES[archetypeKey];
+  if (!archetype) {
+    console.error('Invalid archetype:', archetypeKey);
+    return [];
   }
-  
-  const deck = commonCosts.map((cost, i) => {
+
+  // Generate a balanced distribution of mana costs
+  const manaCosts = [
+    ...Array(5).fill(1),  // 5 one-mana cards
+    ...Array(4).fill(2),  // 4 two-mana cards
+    ...Array(4).fill(3),  // 4 three-mana cards
+    ...Array(4).fill(4),  // 4 four-mana cards
+    ...Array(3).fill(5),  // 3 five-mana cards
+    ...Array(2).fill(6),  // 2 six-mana cards
+    ...Array(2).fill(7),  // 2 seven-mana cards
+    ...Array(1).fill(8)   // 1 eight-mana card
+  ];
+
+  // Select 5 random indices for Taunt (20% of 25 cards)
+  const tauntIndices = new Set();
+  while (tauntIndices.size < 5) {
+    tauntIndices.add(Math.floor(Math.random() * 25));
+  }
+
+  const deck = manaCosts.map((cost, i) => {
     const hasTaunt = tauntIndices.has(i);
-    const card = generateCard(`preview_${archetypeKey}_common_${i}`, archetypeKey, hasTaunt, cost);
-    if (!card) return null;
-    return {
-      ...card,
-      id: `preview_${archetypeKey}_common_${i}`, // Ensure preview ID is maintained
-      isSpecial: false,
-      effects: hasTaunt ? ['Taunt'] : [],
-      effectDetails: hasTaunt ? [{ type: 'Taunt', description: 'Enemies must attack this unit first' }] : []
-    };
+    const card = generateCard(`preview_${archetypeKey}_${i}`, archetypeKey, hasTaunt, cost);
+    if (!card) {
+      console.error(`Failed to generate card for archetype ${archetypeKey} at index ${i}`);
+      return null;
+    }
+    return card;
   }).filter(Boolean); // Remove any null cards
-  
+
+  if (deck.length !== 25) {
+    console.error(`Generated deck has ${deck.length} cards instead of 25`);
+    return [];
+  }
+
   return deck;
 };
 
@@ -207,19 +225,22 @@ export const generateDeck = (archetypeKey) => {
 };
 
 // Initialize a new game state
-export const initializeGame = (player1Archetype, player2Archetype) => {
+export const initializeGame = (player1Deck, player2Deck) => {
   const board = Array(ROWS).fill().map(() => Array(COLS).fill(null));
-  const player1Deck = generateDeck(player1Archetype);
-  const player2Deck = generateDeck(player2Archetype);
+  
+  // Handle custom decks vs archetype strings
+  const player1DeckCards = typeof player1Deck === 'string' ? generateDeck(player1Deck) : player1Deck.cards;
+  const player2DeckCards = typeof player2Deck === 'string' ? generateDeck(player2Deck) : player2Deck.cards;
+  
   const players = [
     {
       id: 0,
       health: STARTING_HEALTH,
       mana: 1,
       manaCapacity: 1,
-      deck: player1Deck,
+      deck: player1DeckCards,
       hand: [],
-      archetype: player1Archetype,
+      archetype: typeof player1Deck === 'string' ? player1Deck : player1Deck.archetype,
       fatigueDamage: 0
     },
     {
@@ -227,9 +248,9 @@ export const initializeGame = (player1Archetype, player2Archetype) => {
       health: STARTING_HEALTH,
       mana: 1,
       manaCapacity: 1,
-      deck: player2Deck,
+      deck: player2DeckCards,
       hand: [],
-      archetype: player2Archetype,
+      archetype: typeof player2Deck === 'string' ? player2Deck : player2Deck.archetype,
       fatigueDamage: 0
     }
   ];

@@ -3,7 +3,7 @@ import { ARCHETYPES, generateCard } from '../gameLogic/helpers';
 import Card from './Card';
 import CardModal from './CardModal';
 
-const CustomDeckBuilder = ({ onBack, onDeckSelect }) => {
+const CustomDeckBuilder = ({ onBack }) => {
   const [selectedArchetype, setSelectedArchetype] = useState('');
   const [deck, setDeck] = useState([]);
   const [deckName, setDeckName] = useState('');
@@ -20,6 +20,10 @@ const CustomDeckBuilder = ({ onBack, onDeckSelect }) => {
   const addToDeck = (card) => {
     if (deck.length >= 25) {
       alert('Deck is full (25 cards)');
+      return;
+    }
+    if (!card) {
+      console.error('Attempted to add invalid card to deck');
       return;
     }
     setDeck([...deck, card]);
@@ -46,19 +50,27 @@ const CustomDeckBuilder = ({ onBack, onDeckSelect }) => {
     }
 
     // Validate all cards have required properties
-    const invalidCards = deck.filter(card => !card.icon || !card.color || !card.unitColor);
+    const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor', 'type'];
+    const invalidCards = deck.filter(card => !card || !requiredProps.every(prop => card[prop] !== undefined));
+    
     if (invalidCards.length > 0) {
       console.error('Invalid cards found:', invalidCards);
       alert('Some cards are missing required properties. Please regenerate the deck.');
       return;
     }
 
+    // Ensure all cards have the correct type
+    const validatedDeck = deck.map(card => ({
+      ...card,
+      type: selectedArchetype
+    }));
+
     const savedDecks = JSON.parse(localStorage.getItem('customDecks') || '[]');
     const newDecks = savedDecks.filter(d => d.name !== deckName);
     newDecks.push({
       name: deckName,
       archetype: selectedArchetype,
-      cards: deck
+      cards: validatedDeck
     });
     localStorage.setItem('customDecks', JSON.stringify(newDecks));
     setSavedDecks(newDecks);
@@ -68,7 +80,12 @@ const CustomDeckBuilder = ({ onBack, onDeckSelect }) => {
   const loadDeck = (deckName) => {
     const deck = savedDecks.find(d => d.name === deckName);
     if (deck) {
-      setDeck(deck.cards);
+      // Ensure all cards have the correct type
+      const validatedDeck = deck.cards.map(card => ({
+        ...card,
+        type: deck.archetype
+      }));
+      setDeck(validatedDeck);
       setDeckName(deck.name);
       setSelectedArchetype(deck.archetype);
     }
@@ -105,35 +122,6 @@ const CustomDeckBuilder = ({ onBack, onDeckSelect }) => {
     }
     
     addToDeck(card);
-  };
-
-  const handleDeckSelect = () => {
-    if (deck.length !== 25) {
-      alert('Deck must have exactly 25 cards');
-      return;
-    }
-    if (!deckName) {
-      alert('Please enter a deck name');
-      return;
-    }
-    if (!selectedArchetype) {
-      alert('Please select an archetype');
-      return;
-    }
-
-    // Validate all cards have required properties
-    const invalidCards = deck.filter(card => !card.icon || !card.color || !card.unitColor);
-    if (invalidCards.length > 0) {
-      console.error('Invalid cards found:', invalidCards);
-      alert('Some cards are missing required properties. Please regenerate the deck.');
-      return;
-    }
-
-    onDeckSelect({
-      name: deckName,
-      archetype: selectedArchetype,
-      cards: deck
-    });
   };
 
   return (
@@ -200,18 +188,12 @@ const CustomDeckBuilder = ({ onBack, onDeckSelect }) => {
             </div>
           </div>
 
-          <div className="flex space-x-2">
+          <div>
             <button
               onClick={saveDeck}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
               Save Deck
-            </button>
-            <button
-              onClick={handleDeckSelect}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Use This Deck
             </button>
           </div>
 

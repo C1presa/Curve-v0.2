@@ -6,7 +6,6 @@ import CardModal from './CardModal';
 
 const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelect }) => {
   const [selectedArchetype, setSelectedArchetype] = useState(null);
-  const [viewMode, setViewMode] = useState('grid');
   const [previewDeck, setPreviewDeck] = useState([]);
   const [expandedCard, setExpandedCard] = useState(null);
   const [savedDecks, setSavedDecks] = useState([]);
@@ -17,12 +16,15 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
     // Generate preview decks for all archetypes
     const previews = {};
     Object.keys(ARCHETYPES).forEach(archetype => {
-      previews[archetype] = generatePreviewDeck(archetype);
+      const deck = generatePreviewDeck(archetype);
+      console.log(`Generated preview deck for ${archetype}:`, deck);
+      previews[archetype] = deck;
     });
     setPreviewDeck(previews);
 
     // Load saved custom decks
     const loadedDecks = JSON.parse(localStorage.getItem('customDecks') || '[]');
+    console.log('Loaded custom decks:', loadedDecks);
     setSavedDecks(loadedDecks);
   }, []);
 
@@ -40,15 +42,23 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
 
       // Validate the deck
       if (!selectedDeck.cards || !Array.isArray(selectedDeck.cards)) {
+        console.error('Invalid deck format:', selectedDeck);
         alert('Invalid deck format');
         return;
       }
 
       // Filter out invalid cards and ensure required properties
       const validCards = selectedDeck.cards.filter(card => {
-        if (!card) return false;
-        const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor'];
-        return requiredProps.every(prop => card[prop] !== undefined);
+        if (!card) {
+          console.log('Found null/undefined card');
+          return false;
+        }
+        const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor', 'type'];
+        const missingProps = requiredProps.filter(prop => card[prop] === undefined);
+        if (missingProps.length > 0) {
+          console.log('Card missing properties:', card, 'Missing:', missingProps);
+        }
+        return missingProps.length === 0;
       });
 
       if (validCards.length !== 25) {
@@ -56,13 +66,16 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
         return;
       }
 
-      // Create a validated deck object
+      // Create a validated deck object with correct types
       const validatedDeck = {
         ...selectedDeck,
-        cards: validCards
+        cards: validCards.map(card => ({
+          ...card,
+          type: selectedDeck.archetype
+        }))
       };
 
-      console.log('Selected custom deck:', validatedDeck);
+      console.log('Confirming custom deck:', validatedDeck);
       onCustomDeckSelect(validatedDeck);
     } else {
       if (!selectedArchetype) {
@@ -73,15 +86,23 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
       // Validate the preview deck
       const previewCards = previewDeck[selectedArchetype];
       if (!previewCards || !Array.isArray(previewCards)) {
+        console.error('Invalid preview deck:', previewCards);
         alert('Invalid preview deck');
         return;
       }
 
       // Filter out invalid cards
       const validCards = previewCards.filter(card => {
-        if (!card) return false;
-        const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor'];
-        return requiredProps.every(prop => card[prop] !== undefined);
+        if (!card) {
+          console.log('Found null/undefined card in preview');
+          return false;
+        }
+        const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor', 'type'];
+        const missingProps = requiredProps.filter(prop => card[prop] === undefined);
+        if (missingProps.length > 0) {
+          console.log('Preview card missing properties:', card, 'Missing:', missingProps);
+        }
+        return missingProps.length === 0;
       });
 
       if (validCards.length !== 25) {
@@ -89,7 +110,16 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
         return;
       }
 
-      console.log('Selected pre-created deck:', selectedArchetype);
+      // Create a validated deck object with correct types
+      const validatedDeck = {
+        archetype: selectedArchetype,
+        cards: validCards.map(card => ({
+          ...card,
+          type: selectedArchetype
+        }))
+      };
+
+      console.log('Confirming pre-created deck:', validatedDeck);
       onSelect(selectedArchetype);
     }
   };
@@ -101,99 +131,9 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
 
       return (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Deck Preview</h3>
-            <div className="space-x-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-1 rounded ${
-                  viewMode === 'grid'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700'
-                }`}
-              >
-                Grid
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1 rounded ${
-                  viewMode === 'list'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700'
-                }`}
-              >
-                List
-              </button>
-            </div>
-          </div>
-
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-3 gap-2">
-              {selectedDeck.cards.map((card, index) => (
-                <div key={index}>
-                  <Card
-                    card={card}
-                    onClick={() => setExpandedCard(card)}
-                    className="cursor-pointer"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {selectedDeck.cards.map((card, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 bg-gray-100 rounded"
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium">{card.name}</span>
-                    <span className="text-sm text-gray-600">
-                      Cost: {card.cost} | Attack: {card.attack} | Health: {card.health}
-                      {card.hasTaunt ? ' | Taunt' : ''}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    if (!selectedArchetype) return null;
-
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium">Deck Preview</h3>
-          <div className="space-x-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-3 py-1 rounded ${
-                viewMode === 'grid'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              Grid
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-1 rounded ${
-                viewMode === 'list'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              List
-            </button>
-          </div>
-        </div>
-
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-3 gap-2">
-            {previewDeck[selectedArchetype]?.map((card, index) => (
+          <h3 className="text-lg font-medium text-center">Deck Preview</h3>
+          <div className="grid grid-cols-5 gap-2">
+            {selectedDeck.cards.map((card, index) => (
               <div key={index}>
                 <Card
                   card={card}
@@ -203,111 +143,129 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
               </div>
             ))}
           </div>
-        ) : (
-          <div className="space-y-2">
-            {previewDeck[selectedArchetype]?.map((card, index) => (
+        </div>
+      );
+    }
+
+    if (!selectedArchetype) return null;
+
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-center">Deck Preview</h3>
+        <div className="grid grid-cols-5 gap-2">
+          {previewDeck[selectedArchetype]?.map((card, index) => (
+            <div key={index}>
+              <Card
+                card={card}
+                onClick={() => setExpandedCard(card)}
+                className="cursor-pointer"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDeckGrid = (decks, onSelect, selectedValue) => {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {decks.map((deck) => {
+          const archetype = ARCHETYPES[deck.archetype || deck.key];
+          if (!archetype) return null;
+
+          return (
+            <button
+              key={deck.name || deck.key}
+              onClick={() => onSelect(deck.name || deck.key)}
+              className={`relative overflow-hidden rounded-xl transition-all duration-300 transform hover:scale-105 ${
+                selectedValue === (deck.name || deck.key)
+                  ? 'ring-4 ring-blue-500 shadow-lg shadow-blue-500/30'
+                  : 'hover:shadow-lg hover:shadow-gray-500/30'
+              }`}
+            >
               <div
-                key={index}
-                className="flex items-center justify-between p-2 bg-gray-100 rounded"
+                className={`h-40 ${archetype.color} flex flex-col items-center justify-center p-4`}
               >
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">{card.name}</span>
-                  <span className="text-sm text-gray-600">
-                    Cost: {card.cost} | Attack: {card.attack} | Health: {card.health}
-                    {card.hasTaunt ? ' | Taunt' : ''}
-                  </span>
-                </div>
+                <div className="text-3xl mb-2">{archetype.icon}</div>
+                <h3 className="text-lg font-bold mb-1">{deck.name || archetype.name}</h3>
+                <p className="text-xs text-center opacity-90">{archetype.description}</p>
               </div>
-            ))}
-          </div>
-        )}
+            </button>
+          );
+        })}
       </div>
     );
   };
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Select Your Deck</h2>
-        <button
-          onClick={onBack}
-          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-        >
-          Back
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex space-x-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              value="pre-created"
-              checked={deckType === 'pre-created'}
-              onChange={(e) => setDeckType(e.target.value)}
-              className="form-radio"
-            />
-            <span>Pre-created Deck</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              value="custom"
-              checked={deckType === 'custom'}
-              onChange={(e) => setDeckType(e.target.value)}
-              className="form-radio"
-            />
-            <span>Custom Deck</span>
-          </label>
+    <div className="min-h-screen bg-gray-900 text-white p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold">Select Your Deck</h2>
+          <button
+            onClick={onBack}
+            className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            Back
+          </button>
         </div>
 
-        {deckType === 'pre-created' ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(ARCHETYPES).map(([key, archetype]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedArchetype(key)}
-                className={`p-4 rounded-lg text-center ${
-                  selectedArchetype === key
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                <div className="text-2xl mb-2">{archetype.icon}</div>
-                <div className="font-medium">{archetype.name}</div>
-                <div className="text-sm mt-1">{archetype.description}</div>
-              </button>
-            ))}
+        <div className="space-y-8">
+          {/* Deck Type Selection */}
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => setDeckType('pre-created')}
+              className={`px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+                deckType === 'pre-created'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Pre-created Decks
+            </button>
+            <button
+              onClick={() => setDeckType('custom')}
+              className={`px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+                deckType === 'custom'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Custom Decks
+            </button>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Select Custom Deck</label>
-              <select
-                value={selectedDeckName}
-                onChange={(e) => setSelectedDeckName(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Select a deck</option>
-                {savedDecks.map((deck) => (
-                  <option key={deck.name} value={deck.name}>
-                    {deck.name} ({ARCHETYPES[deck.archetype].name})
-                  </option>
-                ))}
-              </select>
-            </div>
+
+          {/* Deck Selection Grid */}
+          {deckType === 'pre-created' ? (
+            renderDeckGrid(
+              Object.entries(ARCHETYPES).map(([key, archetype]) => ({ key, ...archetype })),
+              setSelectedArchetype,
+              selectedArchetype
+            )
+          ) : (
+            savedDecks.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-xl text-gray-400">No custom decks saved.</p>
+                <p className="text-sm text-gray-500 mt-2">Create a custom deck in the deck builder.</p>
+              </div>
+            ) : (
+              renderDeckGrid(savedDecks, setSelectedDeckName, selectedDeckName)
+            )
+          )}
+
+          {/* Confirm Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={handleConfirmSelection}
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors transform hover:scale-105 shadow-lg shadow-blue-500/30"
+            >
+              Confirm Selection
+            </button>
           </div>
-        )}
 
-        {renderDeckPreview()}
-
-        <div className="flex justify-end">
-          <button
-            onClick={handleConfirmSelection}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Confirm Selection
-          </button>
+          {/* Deck Preview */}
+          {renderDeckPreview()}
         </div>
       </div>
 

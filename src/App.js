@@ -318,7 +318,7 @@ const CardBattleGame = () => {
     return (
       <ErrorBoundary>
         <DeckSelection
-          onSelectDeck={handleDeckSelect}
+          onSelect={handleDeckSelect}
           onBack={backToMenu}
           selectedCustomDeck={selectedCustomDeck}
           onCustomDeckSelect={handleCustomDeckSelect}
