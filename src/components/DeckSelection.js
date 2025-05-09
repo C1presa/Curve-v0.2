@@ -37,12 +37,59 @@ const DeckSelection = ({ onSelect, onBack, selectedCustomDeck, onCustomDeckSelec
         alert('Selected deck not found');
         return;
       }
-      onCustomDeckSelect(selectedDeck);
+
+      // Validate the deck
+      if (!selectedDeck.cards || !Array.isArray(selectedDeck.cards)) {
+        alert('Invalid deck format');
+        return;
+      }
+
+      // Filter out invalid cards and ensure required properties
+      const validCards = selectedDeck.cards.filter(card => {
+        if (!card) return false;
+        const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor'];
+        return requiredProps.every(prop => card[prop] !== undefined);
+      });
+
+      if (validCards.length !== 25) {
+        alert(`Deck must have exactly 25 valid cards (found ${validCards.length})`);
+        return;
+      }
+
+      // Create a validated deck object
+      const validatedDeck = {
+        ...selectedDeck,
+        cards: validCards
+      };
+
+      console.log('Selected custom deck:', validatedDeck);
+      onCustomDeckSelect(validatedDeck);
     } else {
       if (!selectedArchetype) {
         alert('Please select an archetype');
         return;
       }
+
+      // Validate the preview deck
+      const previewCards = previewDeck[selectedArchetype];
+      if (!previewCards || !Array.isArray(previewCards)) {
+        alert('Invalid preview deck');
+        return;
+      }
+
+      // Filter out invalid cards
+      const validCards = previewCards.filter(card => {
+        if (!card) return false;
+        const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor'];
+        return requiredProps.every(prop => card[prop] !== undefined);
+      });
+
+      if (validCards.length !== 25) {
+        alert(`Deck must have exactly 25 valid cards (found ${validCards.length})`);
+        return;
+      }
+
+      console.log('Selected pre-created deck:', selectedArchetype);
       onSelect(selectedArchetype);
     }
   };

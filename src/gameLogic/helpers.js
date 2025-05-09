@@ -122,7 +122,8 @@ export const generateCard = (id, archetypeKey, hasTaunt = false, specifiedCost =
     }
   }
   
-  return {
+  // Ensure all required properties are present
+  const card = {
     id,
     name: hasTaunt ? `${archetype.name} Guardian` : `${archetype.name} Warrior`,
     cost,
@@ -140,6 +141,17 @@ export const generateCard = (id, archetypeKey, hasTaunt = false, specifiedCost =
     effects: hasTaunt ? ['Taunt'] : [],
     effectDetails: hasTaunt ? [{ type: 'Taunt', description: 'Enemies must attack this unit first' }] : []
   };
+
+  // Validate the card has all required properties
+  const requiredProps = ['id', 'name', 'cost', 'attack', 'health', 'icon', 'color', 'unitColor', 'highlightColor'];
+  const missingProps = requiredProps.filter(prop => !card[prop]);
+  
+  if (missingProps.length > 0) {
+    console.error('Generated card missing required properties:', missingProps);
+    return null;
+  }
+
+  return card;
 };
 
 // Generate a preview deck for deck selection
