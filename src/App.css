@@ -1,0 +1,50 @@
+.menu-background {
+  background-image: url('./images/menu-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative; /* For overlay */
+}
+
+.menu-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent dark overlay */
+  z-index: 1;
+}
+
+.menu-background > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fallback for game background */
+.game-background {
+  background: linear-gradient(to bottom, #1a202c, #2d3748);
+  position: relative;
+}
+
+.game-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.game-background > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Optional: Pixelated effect for pixel art */
+.pixelated {
+  image-rendering: pixelated;
+} 

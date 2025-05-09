@@ -8,6 +8,8 @@ import PlayerHand from './components/PlayerHand';
 import CardModal from './components/CardModal';
 import DeckSelection from './components/DeckSelection';
 import GameMenu from './components/GameMenu';
+import CustomDeckBuilder from './components/CustomDeckBuilder';
+import './App.css';
 
 // Game Constants
 const ROWS = 5;
@@ -64,15 +66,9 @@ const CardBattleGame = () => {
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [playerDeckChoices, setPlayerDeckChoices] = useState({ player1: null, player2: null });
   const [deckSelectionPhase, setDeckSelectionPhase] = useState(null);
+  const [selectedCustomDeck, setSelectedCustomDeck] = useState(null);
   const timeoutRefs = useRef([]);
   const logRef = useRef(null);
-  
-  // Get background color based on current player's archetype
-  const getBackgroundClass = useCallback(() => {
-    if (!state) return 'bg-gray-900';
-    const currentArchetype = state.players[state.currentPlayer].archetype;
-    return `bg-gradient-to-b from-${ARCHETYPES[currentArchetype].color} to-gray-900`;
-  }, [state]);
   
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -211,6 +207,7 @@ const CardBattleGame = () => {
     setGameMode(mode);
     setDeckSelectionPhase('player1');
     setPlayerDeckChoices({ player1: null, player2: null });
+    setSelectedCustomDeck(null);
   }, []);
 
   const handleDeckSelect = useCallback((archetype) => {
@@ -250,23 +247,83 @@ const CardBattleGame = () => {
     }
   }, [deckSelectionPhase, gameMode, playerDeckChoices.player1]);
 
+  const handleCustomDeckSelect = useCallback((deck) => {
+    if (deckSelectionPhase === 'player1') {
+      setPlayerDeckChoices(prev => ({ ...prev, player1: deck }));
+      setSelectedCustomDeck(deck);
+      
+      if (gameMode === 'ai') {
+        // AI randomly selects a deck
+        const archetypes = Object.keys(ARCHETYPES);
+        const aiArchetype = archetypes[Math.floor(Math.random() * archetypes.length)];
+        
+        // Start game immediately for AI mode
+        const initialState = initializeGame(deck, aiArchetype);
+        initialState.gameMode = gameMode;
+        
+        dispatch({ 
+          type: ACTIONS.START_GAME, 
+          payload: initialState
+        });
+        setDeckSelectionPhase(null);
+      } else {
+        // 1v1 mode - player 2 selects deck
+        setDeckSelectionPhase('player2');
+      }
+    } else if (deckSelectionPhase === 'player2') {
+      setPlayerDeckChoices(prev => ({ ...prev, player2: deck }));
+      setSelectedCustomDeck(deck);
+      
+      // Start game with both players' deck choices
+      const initialState = initializeGame(playerDeckChoices.player1, deck);
+      initialState.gameMode = gameMode;
+      
+      dispatch({ 
+        type: ACTIONS.START_GAME, 
+        payload: initialState
+      });
+      setDeckSelectionPhase(null);
+    }
+  }, [deckSelectionPhase, gameMode, playerDeckChoices.player1]);
+
   const backToMenu = useCallback(() => {
     setGameMode('menu');
     setDeckSelectionPhase(null);
     setPlayerDeckChoices({ player1: null, player2: null });
+    setSelectedCustomDeck(null);
   }, []);
   
   // Main render logic
   if (gameMode === 'menu') {
-    return <GameMenu onStart1v1={() => startDeckSelection('1v1')} onStartAI={() => startDeckSelection('ai')} />;
+    return (
+      <ErrorBoundary>
+        <GameMenu 
+          onStart1v1={() => startDeckSelection('1v1')}
+          onStartAI={() => startDeckSelection('ai')}
+          onCustomDeck={() => setGameMode('custom-deck')}
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  if (gameMode === 'custom-deck') {
+    return (
+      <ErrorBoundary>
+        <CustomDeckBuilder onBack={backToMenu} />
+      </ErrorBoundary>
+    );
   }
 
   if (deckSelectionPhase) {
     return (
-      <DeckSelection 
-        onSelectDeck={handleDeckSelect} 
-        onBack={backToMenu}
-      />
+      <ErrorBoundary>
+        <DeckSelection
+          onSelectDeck={handleDeckSelect}
+          onBack={backToMenu}
+          selectedCustomDeck={selectedCustomDeck}
+          onCustomDeckSelect={handleCustomDeckSelect}
+        />
+      </ErrorBoundary>
     );
   }
 
@@ -276,7 +333,7 @@ const CardBattleGame = () => {
 
   // Game UI rendering
   return (
-    <div className={`min-h-screen ${getBackgroundClass()} text-white p-4`}>
+    <div className="min-h-screen game-background text-white p-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">

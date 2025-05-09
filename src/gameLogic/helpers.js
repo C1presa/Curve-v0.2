@@ -79,9 +79,14 @@ export const ARCHETYPES = {
 };
 
 // Generate a single card
-export const generateCard = (id, archetypeKey, hasTaunt = false) => {
+export const generateCard = (id, archetypeKey, hasTaunt = false, specifiedCost = null) => {
   const archetype = ARCHETYPES[archetypeKey];
-  const cost = Math.floor(Math.random() * 10) + 1;
+  if (!archetype) {
+    console.error('Invalid archetype:', archetypeKey);
+    return null;
+  }
+
+  const cost = specifiedCost || Math.floor(Math.random() * 10) + 1;
   let attack, health;
   
   if (hasTaunt) {
@@ -133,52 +138,27 @@ export const generateCard = (id, archetypeKey, hasTaunt = false) => {
 
 // Generate a preview deck for deck selection
 export const generatePreviewDeck = (archetypeKey) => {
-  const archetype = ARCHETYPES[archetypeKey];
-  const deck = [];
   const commonCosts = [1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8];
-  commonCosts.forEach((cost, i) => {
-    let attack, health;
-    if (archetypeKey === 'orc') {
-      attack = Math.floor(cost * 1.2);
-      health = Math.floor(cost * 0.8);
-    } else if (archetypeKey === 'minotaur') {
-      attack = Math.floor(cost * 0.8);
-      health = Math.floor(cost * 1.3);
-    } else if (archetypeKey === 'human') {
-      attack = Math.floor(cost * 0.9);
-      health = Math.floor(cost * 1.1);
-    } else if (archetypeKey === 'demon') {
-      attack = Math.floor(cost * 1.2);
-      health = Math.floor(cost * 0.8);
-    } else if (archetypeKey === 'ninja') {
-      attack = Math.floor(cost * 1.0);
-      health = Math.floor(cost * 1.0);
-    } else if (archetypeKey === 'runner') {
-      attack = Math.floor(cost * 1.3);
-      health = Math.floor(cost * 0.7);
-    } else if (archetypeKey === 'druid') {
-      attack = Math.floor(cost * 0.8);
-      health = Math.floor(cost * 1.2);
-    } else {
-      attack = cost;
-      health = cost;
-    }
-    attack = Math.max(1, attack);
-    health = Math.max(1, health);
-    deck.push({
-      id: `preview_${archetypeKey}_common_${i}`,
-      name: `${archetype.name} Warrior`,
-      cost,
-      attack,
-      health,
-      maxHealth: health,
-      type: archetypeKey,
+  
+  // Select 3 random indices for Taunt (20% of 15 cards)
+  const tauntIndices = new Set();
+  while (tauntIndices.size < 3) {
+    tauntIndices.add(Math.floor(Math.random() * 15));
+  }
+  
+  const deck = commonCosts.map((cost, i) => {
+    const hasTaunt = tauntIndices.has(i);
+    const card = generateCard(`preview_${archetypeKey}_common_${i}`, archetypeKey, hasTaunt, cost);
+    if (!card) return null;
+    return {
+      ...card,
+      id: `preview_${archetypeKey}_common_${i}`, // Ensure preview ID is maintained
       isSpecial: false,
-      effects: [],
-      effectDetails: [],
-      description: 'Basic unit with no special abilities'
-    });
-  });
+      effects: hasTaunt ? ['Taunt'] : [],
+      effectDetails: hasTaunt ? [{ type: 'Taunt', description: 'Enemies must attack this unit first' }] : []
+    };
+  }).filter(Boolean); // Remove any null cards
+  
   return deck;
 };
 
@@ -193,7 +173,10 @@ export const generateDeck = (archetypeKey) => {
   
   for (let i = 0; i < 15; i++) {
     const hasTaunt = tauntIndices.has(i);
-    deck.push(generateCard(`p${i}_common_${i}`, archetypeKey, hasTaunt));
+    const card = generateCard(`p${i}_common_${i}`, archetypeKey, hasTaunt);
+    if (card) {
+      deck.push(card);
+    }
   }
   
   // Shuffle deck

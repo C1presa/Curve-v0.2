@@ -2,10 +2,10 @@
 import React from 'react';
 import { ARCHETYPES } from '../gameLogic/helpers';
 
-const GameMenu = ({ onStart1v1, onStartAI }) => (
-  <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4">
+const GameMenu = ({ onStart1v1, onStartAI, onCustomDeck }) => (
+  <div className="min-h-screen menu-background text-white p-4">
     <div className="flex flex-col items-center justify-center min-h-[600px]">
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 bg-gray-800 bg-opacity-70 p-8 rounded-xl">
         <h1 className="text-7xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
           CURVE GAME
         </h1>
@@ -24,8 +24,14 @@ const GameMenu = ({ onStart1v1, onStartAI }) => (
         >
           vs AI
         </button>
+        <button
+          onClick={onCustomDeck}
+          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-bold py-4 px-6 rounded-xl text-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/30"
+        >
+          Custom Deck
+        </button>
       </div>
-      <div className="mt-10 text-gray-400 text-center max-w-md">
+      <div className="mt-10 text-gray-400 text-center max-w-md bg-gray-800 bg-opacity-70 p-6 rounded-xl">
         <p className="mb-4">A strategic card battle game where you lead your chosen archetype's forces across the battlefield to victory!</p>
         {/* Archetype showcase */}
         <div className="grid grid-cols-2 gap-4 mt-8">
